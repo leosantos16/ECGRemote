@@ -22,13 +22,14 @@ Voce tem 2 formas de utilizar o servidor deste repositorio
 ## Requisitos
 #### Full Local 
 - NodeJS [https://nodejs.org/en/](https://nodejs.org/en/)
+- MongoDB [https://www.mongodb.com/](https://www.mongodb.com/)
 - Python 3.x [https://www.python.org/downloads/](https://www.python.org/downloads/)
 - yarn [https://yarnpkg.com/package/download](https://yarnpkg.com/package/download)
-- Biblioteca Python biosppy
+- Biblioteca Python biosppy [https://biosppy.readthedocs.io/en/stable/](https://biosppy.readthedocs.io/en/stable/)
 - Aplicação ECG Remoto (este repositório)
 
 #### Docker Version
-- Docker [https://docs.docker.com/](https://docs.docker.com/)
+- Docker e Docker Compose [https://docs.docker.com/](https://docs.docker.com/)
 
 #### Heroku CLI
 - Heroku CLI [https://devcenter.heroku.com/articles/heroku-cli](https://devcenter.heroku.com/articles/heroku-cli)
@@ -56,6 +57,11 @@ pip install request
 pip install pymongo[srv]
 pip install python-dotenv
 ```
+4. Verifique a instalacao do BiosSPy
+```sh
+cd python_src
+python test.py
+```
 
 ## Utilizacao
 Apos o set-up do ambiente escolhido, voce precisa destes comandos para executar
@@ -66,56 +72,52 @@ yarn dev
 ```
 Visualize o servidor rodando no navegador:
 ```sh
-http://localhost:3366/
+http://localhost:${SERVER_PORT}/
 ```
 
 #### Docker Version
-Voce so precisa fazer o "puxar" as configuracoes do container diretamente do registro `marcelojanke/ecg_remoto` que esta na nuvem e escolher um nome para ***SEU_CONTAINER***.
+Utilize o comando abaixo para montar e rodar a API ECG Remoto e o Banco de Dados MongoDB. 
 ```sh
-docker pull marcelojanke/ecg_remoto 
-docker run -d -p 3333:3333 --name SEU_CONTAINER marcelojanke/ecg_remoto
+sudo docker-compose up -d
 ```
-Caso você precise Criar a imagem para o seu container:
-```sh
-docker build -t name/aplicacao . 
-docker run -d -p 3333:3333 --name SEU_CONTAINER name/aplicacao
-```
+O script do Docker Compose monta uma imagem para o MongoDB e uma imagem para a API ECG Remoto. A imagem do MongoDB vem diretamente do repositorio publico [Docker Hub](https://hub.docker.com/_/mongo). Ja a imagem sera construida localmente seguindo as instrucoes do `Dockerfile` deste repo. Em seguida, dois containers sao instaciados a partir das imagens.
 
-#### Utilização
-1. Verifique se ***SEU_CONTAINER*** esta na lista de containers e se esta executando
+1. Verifique se ***DB_ECG*** e ***CLOUD_ECG*** estao na lista de containers e se estao executando
 ```sh
-docker ps -a
+sudo docker ps -a
 ```
 Coluna *STATUS* da figura esta em **Up** quando o container esta executando. *STATUS* **Exited** indica o container parado. 
-![](./img/printTerminal.png)
 
-2. Caso ***SEU_CONTAINER*** esteja na lista e esta parado, voce pode inicializa-lo:
+2. Caso ***DB_ECG*** ou ***CLOUD_ECG***  estejam parados, ou seja, na lista de containers com status **Exited**, voce pode inicializa-los:
 ```sh
-docker container start SEU_CONTAINER
+sudo docker container start NOME_CONTAINER
 ```
-3. Com seu container executando, visualize o servidor rodando no navegador `http://localhost:3333/`
-
-![](./img/printNavegador.png)
-
-4. Caso ***SEU_CONTAINER*** esteja na lista e executando, voce pode para-lo:
+Caso ***DB_ECG*** ou ***CLOUD_ECG***  estejam executando, ou seja, na lista de containers com status **UP**, voce pode inicializa-los:
 ```sh
-docker container stop SEU_CONTAINER
+sudo docker container stop NOME_CONTAINER
 ```
-5. Voce pode remover ***SEU_CONTAINER*** da lista de containers: 
+3. Voce pode remover toda a instalacao com o comando:
 ```sh
-docker container stop SEU_CONTAINER
-docker container rm SEU_CONTAINER
+docker-compose down
+```
+
+
+#### Utilização
+1. Com ambos os containeres executando (status **Up**), verifique se voce consegue acessar:
+```sh
+# API ECG remoto
+curl http://localhost:${SERVER_PORT}/`
+# Mongo DB
+curl http://localhost:27017/ 
+```
+2. Em caso de problemas, verifique os logs:
+```sh
+docker-compose logs -f
 ```
 
 ## Rotas
 | Rota               | Metodo | Descricao                                                                                                  |
 |--------------------|--------|------------------------------------------------------------------------------------------------------------|
-| `/savelog`         | POST   | Salva as requisicoes no formato `{data:SEU_DADO}`                                                          |
-| `/`                | GET    | Rota para testar requisicoes GET. Retorna `{"res":200}` em caso de sucesso                                 |
-| `/see`             | GET    | Lista todas requisicoes POST na rota `/savelog`                                                            |
-| `/seetxt`          | GET    | Lista todas requisicoes ja realizadas no servidor                                                          |
-| `/rotaAlternativa` | GET    | Alternativa para o POST em /savelog. Exemplo: http://ecgremoto.herokuapp.com/rotaAlternativa?data=SEU_DADO |
-| `/remove`          | DELETE | deleta todas os dados armazenados gerado pela rota `/savelog`                                              |
 | `/save_exam`       | POST   | Salva os exames no formato `{sampling_rate": 360,"resolution": 145,"labels": ["ECG"],"data": [968,870,1110,4567],	"userId": "Fulano de tal",	"title": "Ola",type": "1 NSR"}`
 | `/:user/exams/:id/remove` |DELETE| Remove o Exame pelo ID
 |`/:user/exams/update/:id`| GET | Faz um Update do exame pelo ID (utilizado para acresentar mais dados de ecg) exemplo: http://ecgremoto.herokuapp.com/{nome}/exams/update/{id}?data=1234 

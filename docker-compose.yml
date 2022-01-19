@@ -1,22 +1,65 @@
-version: "1"
-
+# Use root/example as user/password credentials
+  
+version: "3.1"
 services:
-    server:
-        container_name: "EcgRemote-Backend"
-        build: '.'
-        
-        env_file: .env
+  db:
+    # image: mongo:4.2
+    image: mongo:latest
+    container_name: DB_ECG
+    restart: always
+    ports:
+      - ${DB_PORT}:27017
+    environment:
+      MONGO_INITDB_DATABASE: ${DB_NAME}
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASS}
 
-        depends_on:
-            - db
-        links:
-            - db
-        ports:
-            - 3333:3333 
-    db:
-        image: 'mongo'
-        container_name: mongodb
-        ports:
-            - 27017:27017
+  cloud-ecg:
+    image: cloud-ecg:latest
+    container_name: CLOUD_ECG
+    build: "./"
+    restart: always
+    ports:
+      - ${SERVER_PORT}:${SERVER_PORT}
+    depends_on:
+        - db
+    volumes:
+      - .:/usr/src/app
+    working_dir: /usr/src/app
+    command: yarn start
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+
+# volumes:
+#   data: {}
+
+#  networks:
+#   default:
+#     name: mongodb_network
+
+# version: "1"
+
+# services:
+#     server:
+#         container_name: 'MONGO_EXPRESS'
+#         build: '.'
+        
+#         env_file: .env
+
+#         depends_on:
+#             - db
+#         links:
+#             - db
+#         ports:
+#             - 3333:3333 
+#     db:
+#         image: 'mongo'
+#         container_name: 'MONGO'
+#         ports:
+#             - 27017:27017
         
 

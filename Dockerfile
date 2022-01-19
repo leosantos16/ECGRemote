@@ -2,6 +2,8 @@ FROM node:latest
 RUN mkdir /app
 
 LABEL AUTHOR="Marcelo Janke <marcelojanke@outlook.com>"
+LABEL MAINTAINER="André Luís Del Mestre Martins <andremartins@ifsul.edu.br>"
+LABEL ADVISOR="André Luís Del Mestre Martins <andremartins@ifsul.edu.br>"
 
 WORKDIR /app
 COPY package.json /app
@@ -19,11 +21,10 @@ pip3 install --no-binary=h5py h5py
 
 RUN pip3 install biosppy
 
-RUN cp .env.example .env
+# RUN cp .env.example .env
 
 RUN pip3 install pymongo[tls] ; pip3 install python-dotenv ;\
  pip3 install dnspython ; pip3 install certifi ; pip3 install requests
 
-
-EXPOSE 3333
+EXPOSE ${SERVER_PORT}
 CMD ["yarn", "start"]

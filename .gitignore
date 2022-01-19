@@ -1,5 +1,8 @@
 node_modules/
 venv/
 .idea/
-.env
 conectados/
+package-lock.json
+.git
+.env
+cantAcces.txt
