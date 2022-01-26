@@ -1,13 +1,17 @@
-import os
-from pymongo import MongoClient
-from dotenv import load_dotenv, find_dotenv
-from biosppy import storage
+# import os
+# from pymongo import MongoClient
+# from dotenv import load_dotenv, find_dotenv
+# from biosppy import storage
+# import certifi
 
-import certifi
+# load_dotenv(find_dotenv())
+# dbClient = MongoClient(os.environ.get("MONGO_DB_URL"), tlsCAFile=certifi.where()).get_default_database()
 
-load_dotenv(find_dotenv())
+from db_connect import get_database
+dbname = get_database()
 
-dbClient = MongoClient(os.environ.get("MONGO_DB_URL"), tlsCAFile=certifi.where()).get_default_database()
+# Create a new collection
+collection_name = dbname['seeder']
 
 doctor = dict({"name" : "Paulo Jaime", "userName" : "paulojaime",
  "doctor": True, "email": "jaiminho@outlook.com", "telefone" : "2932983"})
@@ -22,7 +26,7 @@ def setUsers():
     
     
     for i in patients:
-        userList.append(dbClient.patients.insert_one(i).inserted_id)
+        userList.append(collection_name.patients.insert_one(i).inserted_id)
 
     return userList
         

@@ -5,25 +5,31 @@ import os
 
 import sys
 
-from pymongo import MongoClient
+# from pymongo import MongoClient
 from bson.objectid import ObjectId
 
-from dotenv import load_dotenv, find_dotenv
+# from dotenv import load_dotenv, find_dotenv
+# import certifi
 
+# load_dotenv(find_dotenv())
 
-import certifi
+# Get the database using the method we defined in pymongo_test_insert file 
+from db_connect import get_database
+dbname = get_database()
 
-load_dotenv(find_dotenv())
+# Create a new collection
+collection_name = dbname['qual_collection']
+
 
 if(len(sys.argv) == 1):
     raise Exception("cade o id seu bobao?")
 
-queary = {"_id": ObjectId(sys.argv[1])}
+query = {"_id": ObjectId(sys.argv[1])}
 
-dbClient = MongoClient(os.environ.get("MONGO_DB_URL"), tlsCAFile=certifi.where()).get_default_database()
+# dbClient = MongoClient(os.environ.get("MONGO_DB_URL"), tlsCAFile=certifi.where()).get_default_database()
 
 
-bolo = dbClient.exams.find_one(queary)
+bolo = dbname.exams.find_one(query)
 
 
 
