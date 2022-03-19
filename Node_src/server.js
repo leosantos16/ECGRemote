@@ -1,14 +1,16 @@
 const app = require("express")()
-const router = require('./router')
+require("dotenv").config()
 const bp = require('body-parser')
 
-
-require("dotenv").config()
-
+const router = require('./router')
 const mongoDB = require('./database/mongo')
 
-mongoDB.mongodb.once("open",  _ => {
-    console.log("Mongo Conectado")
+const patientRouter = require('./router/PatientRouter')
+const observationRouter = require('./router/ObservationRouter')
+const ObservationController = require("./controller/ObservationController")
+
+mongoDB.mongodb.once("open", _ => {
+  console.log("Mongo Conectado")
 })
 
 let allowCrossDomain = (req, res, next) => {
@@ -19,12 +21,14 @@ let allowCrossDomain = (req, res, next) => {
 
 app.use(allowCrossDomain);
 
-
 app.set('view engine', 'html')
 
-app.use(bp.json()).use(bp.urlencoded({extended: true})).use(router)
+app.use(bp.json())
+  .use(bp.urlencoded({ extended: true }))
+  .use(patientRouter)
+  .use(observationRouter)
 
 
 app.listen(process.env.SERVER_PORT, () => {
-    console.log("server started")
+  console.log("server started")
 })
