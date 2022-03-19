@@ -2,12 +2,10 @@ const app = require("express")()
 require("dotenv").config()
 const bp = require('body-parser')
 
-const router = require('./router')
-const mongoDB = require('./database/mongo')
+const mongoDB = require('./mongo')
 
 const patientRouter = require('./router/PatientRouter')
 const observationRouter = require('./router/ObservationRouter')
-const ObservationController = require("./controller/ObservationController")
 
 mongoDB.mongodb.once("open", _ => {
   console.log("Mongo Conectado")
