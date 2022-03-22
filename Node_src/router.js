@@ -1,62 +1,55 @@
-const router = require("express").Router()
-const set_data  = require("./class")
+const router = require('express').Router();
+const set_data = require('./class');
 
-const fs = require("fs")
-const path = require("path")
-let event = require("events")
+const patientRouter = require('./Routes/Patient');
+const deviceRouter = require('./Routes/Device');
 
-const examDBO = require("./database/Controller/exam")
+const authRouter = require('./Routes/Auth');
 
-const eventEmitter = new event.EventEmitter()
+function verifyJWT(req, res, next) {
+  const token = req.headers['Authorization'];
+  if (!token)
+    return res.status(401).json({ auth: false, message: 'No token provided.' });
 
-const {inspect} = require("util") 
+  jwt.verify(token, process.env.SECRET, function (err, decoded) {
+    if (err)
+      return res
+        .status(500)
+        .json({ auth: false, message: 'Failed to authenticate token.' });
+    req.userId = decoded.id;
+    next();
+  });
+}
 
-// Criar um arquivo para cada transmissao de dados
-// criar um timeout de conexao
-// criar o link pro txt da req na rota /seetxt
+router.use('/auth', authRouter);
 
-//Rotas para mongoDB
+router.use('/test', verifyJWT, (req, res) => console.log(req));
 
-router.post("/save_exam", (req,res) => {
-    //res.json(req.body)
-    examDBO.create(req.body,res)
-})
+router.use('/Patient', patientRouter);
+router.use('/Device', deviceRouter);
 
-router.post("/save_user", (req,res) => {
-    res.json("teste")
-})
-router.delete("/:user/exams/:id/remove", (req,res) => {
-    examDBO.removeExam(req,res)
-})
+router.get('/render', (req, res) => {
+  const data = new set_data(req.query['id']);
 
-router.get("/:user/exams/update/:id", (req,res) => {
-    //res.json(req.query)
-    examDBO.findAndUpdate(req,res)
-})
+  res.json({ res: JSON.parse(data.getShaHead()) });
+});
 
-router.get("/list_all", (req,res) => {
-    examDBO.find(req.query,res)
-})
+router.get('/.well-known/smart-configuration', (req, res) => {
+  res.json({
+    authorization_endpoint: 'http://localhost:8000/auth/register',
+    token_endpoint: 'http://localhost:8000/auth/token',
+    token_endpoint_auth_methods_supported: ['private_key_jwt'],
+    grant_types_supported: ['authorization_code', 'client_credentials'],
+    scopes_supported: ['patient/*.rs'],
+    response_types_supported: ['code'],
+    capabilities: ['client-confidential-asymmetric'],
+    code_challenge_methods_supported: ['S256'],
+    token_endpoint_auth_signing_alg_values_supported: ['RS384', 'ES384'],
+  });
+});
 
-router.get("/:user/exams/:id", (req,res) =>{
-    examDBO.findById(req,res)
-})
+router.get('/', (req, res) => {
+  res.json({ res: res.statusCode });
+});
 
-router.post("/update_exam/:id", (req,res) => {
-
-    examDBO.postUpdate(req,res)
-})
-
-router.get("/render",(req,res) => {
-    const data = new set_data(req.query["id"])
-    
-    res.json({"res": JSON.parse(data.getShaHead())})
-})
-
-
-//Rota Raiz
-router.get("/", (req,res) => {
-    res.json({"res": res.statusCode})
-})
-
-module.exports = router
+module.exports = router;
