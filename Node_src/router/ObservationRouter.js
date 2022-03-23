@@ -5,6 +5,6 @@ router.post("/baseR4/Observation", ObservationController.createObeservation)
 
 router.get("/baseR4/Observation/:id", ObservationController.getObservationById)
 
-router.put("/baseR4/Observation/:id", ObservationController.updateObservation)
+router.patch("/baseR4/Observation/:id", ObservationController.patchComponent);
 
 module.exports = router

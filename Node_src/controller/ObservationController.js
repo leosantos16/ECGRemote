@@ -33,37 +33,23 @@ class ObservationController {
         }
     }
 
-    async updateObservation(req, res) {
 
-        let observation = req.body;
 
-        if (observation.subject != undefined || observation.subject != null) {
-            let patientReference = observation.subject.reference;
-            let patientId = patientReference.split("/")[1];
-            try {
-                if (patientId.match(/^[0-9a-fA-F]{24}$/)) {
-                    console.log("Entrou aqui")
-                    const patient = await PatientSchema.findById(patientId).exec();
-                    if (patient == null) {
-                        return res.status(404).json("Patient not found");
-                    }
-                } else {
-                    return res.status(404).json("Patient not found");
-                }
-            } catch (error) {
-                return res.status(500).json(error);
-            }
-            observation.subject.reference = `/Patient/${patientId}`;
-        }
-
+    async patchComponent(req, res) {
+        let component = req.body;
         try {
-            const toGetComponentData = await ObservationSchema.findById(req.params.id).exec();
-            observation.component = [...toGetComponentData.component, ...observation.component];
+            const observation = await ObservationSchema.findById(req.params.id).exec();
+            if (observation == null) {
+                return res.status(404).json("Observation not found");
+            }
+            observation.component = [...observation.component, ...observation.component];
             const updated = await ObservationSchema.updateOne({ _id: req.params.id }, observation)
-            return res.status(200).json(updated)
+            if(updated.nModified == 1 ){
+                return res.status(200).json(observation)
+            }
         } catch (error) {
             console.log(error)
-            res.status(500).json({ erro: error })
+            return res.status(500).json(error)
         }
 
 
@@ -72,9 +58,12 @@ class ObservationController {
     async getObservationById(req, res) {
         try {
             const result = await ObservationSchema.findById(req.params.id).exec();
+            if (result == null) {
+                return res.status(404).json("Observation not found");
+            }
             return res.json(result);
         } catch (error) {
-            return res.status(404).json("Observation not found");
+            return res.status(500).json(error);
         }
     }
 
