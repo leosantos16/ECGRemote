@@ -26,7 +26,7 @@ let allowCrossDomain = (req, res, next) => {
 
 app.use(allowCrossDomain);
 
-app.set('view engine', 'html');
+app.set('view engine', 'ejs');
 
 app
   .use(bp.json())

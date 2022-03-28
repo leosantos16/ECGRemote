@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 
 module.exports = function () {
   const AuthSchema = new mongoose.Schema({
-    redirect_uris: {
-      type: [String],
+    redirect_uri: {
+      type: String,
       required: true,
     },
     client_name: {
@@ -14,7 +14,18 @@ module.exports = function () {
     },
     jwks_uri: {
       type: String,
-      required: true,
+    },
+    client_id: {
+      type: String,
+    },
+    scope: {
+      type: String,
+    },
+    aud: {
+      type: String,
+    },
+    state: {
+      type: String,
     },
   });
 

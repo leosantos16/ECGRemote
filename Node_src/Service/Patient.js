@@ -21,9 +21,20 @@ class PatientService {
     }
   }
 
+  async findOne() {
+    try {
+      const result = await PatientDatabase.findOne();
+      return result;
+    } catch (e) {
+      return e;
+    }
+  }
+
   async findById(id) {
     try {
-      const result = await PatientDatabase.findById(id);
+      const result = await PatientDatabase.findOne({
+        id,
+      });
       return result;
     } catch (e) {
       return e;
