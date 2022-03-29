@@ -1,5 +1,6 @@
 const router = require("express").Router()
 const ObservationController = require('../controller/ObservationController');
+const Observation = require('../model/observation/Observation');
 
 router.post("/baseR4/Observation", ObservationController.createObeservation)
 

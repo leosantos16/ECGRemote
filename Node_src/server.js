@@ -7,6 +7,11 @@ const mongoDB = require('./mongo')
 const patientRouter = require('./router/PatientRouter')
 const observationRouter = require('./router/ObservationRouter')
 
+const swaggerUI = require("swagger-ui-express");
+const swaggerDocument = require('./swagger.json');
+
+app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocument))
+
 mongoDB.mongodb.once("open", _ => {
   console.log("Mongo Conectado")
 })
@@ -28,5 +33,5 @@ app.use(bp.json())
 
 
 app.listen(process.env.SERVER_PORT, () => {
-  console.log("server started")
+  console.log("server started" + process.env.SERVER_PORT)
 })

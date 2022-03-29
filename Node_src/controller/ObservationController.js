@@ -37,12 +37,14 @@ class ObservationController {
 
     async patchComponent(req, res) {
         let component = req.body;
+        console.log(component);
         try {
             const observation = await ObservationSchema.findById(req.params.id).exec();
             if (observation == null) {
                 return res.status(404).json("Observation not found");
             }
-            observation.component = [...observation.component, ...observation.component];
+            console.log(observation.component);
+            observation.component = [...observation.component, ...component];
             const updated = await ObservationSchema.updateOne({ _id: req.params.id }, observation)
             if(updated.nModified == 1 ){
                 return res.status(200).json(observation)
@@ -56,6 +58,7 @@ class ObservationController {
     }
 
     async getObservationById(req, res) {
+        console.log("chamando by id")
         try {
             const result = await ObservationSchema.findById(req.params.id).exec();
             if (result == null) {
