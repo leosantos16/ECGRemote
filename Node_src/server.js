@@ -1,8 +1,10 @@
 const app = require('express')();
 const router = require('./router');
 const bp = require('body-parser');
+const cors = require('cors');
 
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const mongoDB = require('./Database/mongo');
 
@@ -10,22 +12,7 @@ mongoDB.mongodb.once('open', (_) => {
   console.log('Mongo Conectado');
 });
 
-let allowCrossDomain = (req, res, next) => {
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header(
-    'Access-Control-Allow-Headers',
-    'origin, authorization, accept, content-type, x-requested-with'
-  );
-  res.header(
-    'Access-Control-Allow-Methods',
-    'GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS'
-  );
-  res.header('Access-Control-Allow-Origin', '*');
-  next();
-};
-
-app.use(allowCrossDomain);
-
+app.use(cors());
 app.set('view engine', 'ejs');
 
 app

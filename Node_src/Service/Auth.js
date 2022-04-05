@@ -1,22 +1,95 @@
 const jwt = require('jsonwebtoken');
-const axios = require('axios').default;
+const crypto = require('crypto');
+const mongoose = require('mongoose');
 const AuthDatabase = require('../Database/Auth')();
+const PacienteService = require('./Pacientes');
 const PatientService = require('./Patient');
 
 class AuthService {
   async register(body) {
     try {
-      await AuthDatabase.create(body);
-      const patient = await PatientService.findOne();
+      const register = await AuthDatabase.create(body);
+      return {
+        id: register.id,
+      };
+    } catch (error) {
+      return {
+        code: 401,
+        error,
+      };
+    }
+  }
+
+  async login(body) {
+    try {
+      const login = await PacienteService.find({
+        cpf: body.cpf,
+        senha: crypto.createHash('md5').update(body.senha).digest('hex'),
+      });
+      if (login.length > 0) {
+        const auth = await AuthDatabase.find({
+          client_id: body.client_id,
+          paciente_id: login[0]._id,
+        });
+        if (auth.length > 0) {
+          const patient = await PatientService.findOne({
+            identifier: {
+              $elemMatch: {
+                value: mongoose.Types.ObjectId(login[0]._id),
+              },
+            },
+          });
+          const code = jwt.sign(
+            { patient: patient.id, scope: auth.scope },
+            'my_secret',
+            {
+              expiresIn: 300,
+            }
+          );
+          return {
+            code,
+            login: login[0],
+          };
+        }
+        return {
+          login: login[0],
+        };
+      }
+      return {
+        code: 401,
+        message: 'Login not found',
+      };
+    } catch (e) {
+      return e;
+    }
+  }
+
+  async authorize(params) {
+    try {
+      const auth = await AuthDatabase.create({
+        aud: params.aud,
+        scope: params.scope,
+        client_id: params.client_id,
+        state: params.state,
+        redirect_uri: params.redirect_uri,
+        paciente_id: params.paciente_id,
+      });
+      const patient = await PatientService.findOne({
+        identifier: {
+          $elemMatch: {
+            value: mongoose.Types.ObjectId(params.paciente_id),
+          },
+        },
+      });
       const code = jwt.sign(
-        { patient: patient.id, scope: body.scope },
+        { patient: patient.id, scope: auth.scope },
         'my_secret',
         {
           expiresIn: 300,
         }
       );
       return {
-        patient,
+        params,
         code,
       };
     } catch (e) {
@@ -33,17 +106,20 @@ class AuthService {
     }
     try {
       const decodedJWT = jwt.decode(body.code);
-      console.log(decodedJWT);
       const result = await AuthDatabase.findOne({
         client_id: body.client_id,
       });
-      console.log(result);
       if (result !== null) {
         const access_token = jwt.sign(
-          { id: result.id, scope: body.scope },
-          'my_secret',
           {
-            expiresIn: 300,
+            scope: decodedJWT.scope,
+            patient: decodedJWT.patient,
+            client_id: body.client_id,
+            expires_in: 3600,
+          },
+          process.env.OAUTH_SECRET,
+          {
+            expiresIn: 3600,
           }
         );
         return {

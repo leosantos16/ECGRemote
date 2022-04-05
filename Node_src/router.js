@@ -2,6 +2,8 @@ const router = require('express').Router();
 const jwt = require('jsonwebtoken');
 const set_data = require('./class');
 
+const pacientesRouter = require('./Routes/Pacientes');
+
 const patientRouter = require('./Routes/Patient');
 const deviceRouter = require('./Routes/Device');
 
@@ -12,14 +14,14 @@ function verifyJWT(req, res, next) {
   if (!token)
     return res.status(401).json({ auth: false, message: 'No token provided.' });
 
-  jwt.verify(token, process.env.OAUTH_SECRET, function (err, decoded) {
+  const code = token.split(' ')[1];
+  jwt.verify(code, process.env.OAUTH_SECRET, function (err, decoded) {
     if (err) {
       console.log(err);
       return res
         .status(500)
         .json({ auth: false, message: 'Failed to authenticate token.' });
     }
-    req.userId = decoded.id;
     next();
   });
 }
@@ -37,10 +39,10 @@ router.get('/key', (req, res) => {
 
 router.use('/auth', authRouter);
 
-router.use('/test', verifyJWT, (req, res) => res.send(200));
+router.use('/Paciente', verifyJWT, pacientesRouter);
 
-router.use('/Patient', patientRouter);
-router.use('/Device', deviceRouter);
+router.use('/Patient', verifyJWT, patientRouter);
+router.use('/Device', verifyJWT, deviceRouter);
 
 router.get('/render', (req, res) => {
   const data = new set_data(req.query['id']);

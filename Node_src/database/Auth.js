@@ -27,6 +27,9 @@ module.exports = function () {
     state: {
       type: String,
     },
+    paciente_id: {
+      type: mongoose.Types.ObjectId,
+    },
   });
 
   const AuthModel = mongoose.model('Auth', AuthSchema);
