@@ -7,6 +7,7 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const mongoDB = require('./Database/mongo');
+const { checkScope } = require('./utils/Auth');
 
 mongoDB.mongodb.once('open', (_) => {
   console.log('Mongo Conectado');
@@ -14,6 +15,7 @@ mongoDB.mongodb.once('open', (_) => {
 
 app.use(cors());
 app.set('view engine', 'ejs');
+app.locals.checkScope = checkScope;
 
 app
   .use(bp.json())

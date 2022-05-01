@@ -22,6 +22,13 @@ class AuthController {
   async postLogin(req, res) {
     const { redirect_uri, state, aud, scope, client_id } = req.body;
     const login = await AuthService.login(req.body);
+    if (login.code && login.code === 401) {
+      res.status(401).json({
+        code: 401,
+        message: 'User flow does not have write permissions!',
+      });
+      return;
+    }
     if (login.code) {
       res.redirect(`${redirect_uri}?state=${state}&code=${login.code}`);
       return;
