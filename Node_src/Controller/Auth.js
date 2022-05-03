@@ -24,8 +24,8 @@ class AuthController {
     const login = await AuthService.login(req.body);
     if (login.code && login.code === 401) {
       res.status(401).json({
-        code: 401,
-        message: 'User flow does not have write permissions!',
+        code: login.code,
+        message: login.message,
       });
       return;
     }

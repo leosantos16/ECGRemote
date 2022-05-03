@@ -40,9 +40,9 @@ class PacientesService {
     }
   }
 
-  async find() {
+  async find(query) {
     try {
-      const result = await PacientesDatabase.find();
+      const result = await PacientesDatabase.find(query);
       return result;
     } catch (e) {
       return e;

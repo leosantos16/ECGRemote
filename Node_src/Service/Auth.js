@@ -24,7 +24,7 @@ class AuthService {
       if (checkScopes[2] || checkScopes[4] || checkScopes[5]) {
         return {
           code: 401,
-          error: 'User flow clients do not have write permission',
+          message: 'User flow clients do not have write permission',
         };
       }
 
