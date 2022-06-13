@@ -24,8 +24,8 @@ services:
     depends_on:
         - db
     volumes:
-      - .:/usr/src/app
-    working_dir: /usr/src/app
+      - ".:/usr/src/app"
+      - "/usr/src/app/node_modules"
     command: yarn start
     logging:
       driver: "json-file"
