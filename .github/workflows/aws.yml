@@ -63,7 +63,7 @@ jobs:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           application_name: cloud-ecg
-          environment_name: Cloudecg-env
+          environment_name: Cloudecg-env-1
           region: ${{ env.AWS_REGION }}
           version_label: "cloud-ecg-source-${{ steps.format-time.outputs.replaced }}"
           deployment_package: deploy.zip
