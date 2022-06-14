@@ -1,30 +1,27 @@
-const app = require("express")()
-const router = require('./router')
-const bp = require('body-parser')
+const app = require('express')();
+const router = require('./router');
+const bp = require('body-parser');
+const cors = require('cors');
 
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
-require("dotenv").config()
+const mongoDB = require('./Database/mongo');
+const { checkScope } = require('./utils/Auth');
 
-const mongoDB = require('./database/mongo')
+mongoDB.mongodb.once('open', (_) => {
+  console.log('Mongo Conectado');
+});
 
-mongoDB.mongodb.once("open",  _ => {
-    console.log("Mongo Conectado")
-})
+app.use(cors());
+app.set('view engine', 'ejs');
+app.locals.checkScope = checkScope;
 
-let allowCrossDomain = (req, res, next) => {
-  res.header('Access-Control-Allow-Origin', "*");
-  res.header('Access-Control-Allow-Headers', "*");
-  next();
-}
-
-app.use(allowCrossDomain);
-
-
-app.set('view engine', 'html')
-
-app.use(bp.json()).use(bp.urlencoded({extended: true})).use(router)
-
+app
+  .use(bp.json())
+  .use(bp.urlencoded({ extended: true }))
+  .use(router);
 
 app.listen(process.env.SERVER_PORT, () => {
-    console.log("server started")
-})
+  console.log('server started');
+});

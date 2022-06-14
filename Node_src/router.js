@@ -1,62 +1,44 @@
-const router = require("express").Router()
-const set_data  = require("./class")
+const router = require('express').Router();
+const jwt = require('jsonwebtoken');
+const set_data = require('./class');
 
-const fs = require("fs")
-const path = require("path")
-let event = require("events")
+const pacientesRouter = require('./Routes/Pacientes');
 
-const examDBO = require("./database/Controller/exam")
+const patientRouter = require('./Routes/Patient');
+const deviceRouter = require('./Routes/Device');
 
-const eventEmitter = new event.EventEmitter()
+const authRouter = require('./Routes/Auth');
+const { verifyJWT } = require('./utils/Auth');
+const wellKnown = require('./utils/wellKnown');
+const key = require('./utils/key');
 
-const {inspect} = require("util") 
+router.get('/key', (req, res) => {
+  res.json(key);
+});
 
-// Criar um arquivo para cada transmissao de dados
-// criar um timeout de conexao
-// criar o link pro txt da req na rota /seetxt
+router.use('/auth', authRouter);
 
-//Rotas para mongoDB
+router.use('/Paciente', verifyJWT, pacientesRouter);
 
-router.post("/save_exam", (req,res) => {
-    //res.json(req.body)
-    examDBO.create(req.body,res)
-})
+router.use('/Patient', verifyJWT, patientRouter);
+router.use('/Device', verifyJWT, deviceRouter);
 
-router.post("/save_user", (req,res) => {
-    res.json("teste")
-})
-router.delete("/:user/exams/:id/remove", (req,res) => {
-    examDBO.removeExam(req,res)
-})
+router.get('/render', (req, res) => {
+  const data = new set_data(req.query['id']);
 
-router.get("/:user/exams/update/:id", (req,res) => {
-    //res.json(req.query)
-    examDBO.findAndUpdate(req,res)
-})
+  res.json({ res: JSON.parse(data.getShaHead()) });
+});
 
-router.get("/list_all", (req,res) => {
-    examDBO.find(req.query,res)
-})
+router.get('/dashboard', (req, res) => {
+  res.render('index');
+});
 
-router.get("/:user/exams/:id", (req,res) =>{
-    examDBO.findById(req,res)
-})
+router.get('/.well-known/smart-configuration', (req, res) => {
+  res.json(wellKnown);
+});
 
-router.post("/update_exam/:id", (req,res) => {
+router.get('/', (req, res) => {
+  res.json({ res: res.statusCode });
+});
 
-    examDBO.postUpdate(req,res)
-})
-
-router.get("/render",(req,res) => {
-    const data = new set_data(req.query["id"])
-    
-    res.json({"res": JSON.parse(data.getShaHead())})
-})
-
-
-//Rota Raiz
-router.get("/", (req,res) => {
-    res.json({"res": res.statusCode})
-})
-
-module.exports = router
+module.exports = router;
