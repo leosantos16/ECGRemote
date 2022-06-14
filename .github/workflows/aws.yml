@@ -2,8 +2,8 @@ name: Deploy CloudECG app on AWS Elastic Beanstalk
 
 env:
   APP_NAME: cloud-ecg
-  S3_BUCKET: cloud-ecg-bucket
-  AWS_REGION: us-east-1
+  S3_BUCKET: cloud-ecg-bucket-brazil
+  AWS_REGION: sa-east-1
   AWS_PLATFORM: Docker
   PIPELINE_ID: ${GITHUB_RUN_ID}-${GITHUB_RUN_NUMBER}
 
