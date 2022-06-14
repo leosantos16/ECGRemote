@@ -21,6 +21,9 @@ services:
     restart: always
     ports:
       - ${SERVER_PORT}:${SERVER_PORT}
+    environment:
+      - OAUTH_SECRET=${OAUTH_SECRET}
+      - DEFAULT_URL=${DEFAULT_URL}
     depends_on:
         - db
     volumes:
