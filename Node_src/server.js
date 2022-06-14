@@ -6,7 +6,7 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
-const mongoDB = require('./Database/mongo');
+const mongoDB = require('./database/mongo');
 const { checkScope } = require('./utils/Auth');
 
 mongoDB.mongodb.once('open', (_) => {
