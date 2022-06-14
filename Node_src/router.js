@@ -1,5 +1,4 @@
 const router = require('express').Router();
-const jwt = require('jsonwebtoken');
 const set_data = require('./class');
 
 const pacientesRouter = require('./Routes/Pacientes');

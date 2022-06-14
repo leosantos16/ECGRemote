@@ -1,4 +1,4 @@
-const PatientDatabase = require('../Database/FHIRResource/Patient')();
+const PatientDatabase = require('../database/FHIRResource/Patient')();
 
 class PatientService {
   async create(patient) {
