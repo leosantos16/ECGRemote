@@ -132,7 +132,7 @@ class AuthService {
       const result = await AuthDatabase.findOne({
         client_id: body.client_id,
       });
-      const decodedJWT = jwt.decode(body.code);
+      const decodedJWT = jwt.verify(body.code, process.env.OAUTH_SECRET);
       let arrayScopes = result.scope.split(' ');
       if (decodedJWT.scope !== undefined) {
         arrayScopes = decodedJWT.scope.split(' ');
