@@ -180,6 +180,7 @@ class AuthService {
         if (arrayScopes.includes('launch/patient')) {
           retorno.patient = patient.id;
         }
+        return retorno;
       } else if (decodedJWT.grant_type === 'client_credentials') {
         const access_token = jwt.sign(
           {
@@ -201,7 +202,6 @@ class AuthService {
         };
         return retorno;
       }
-      return retorno;
     } catch (e) {
       console.log(e);
       return {
