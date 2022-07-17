@@ -2,6 +2,7 @@ const app = require('express')();
 const router = require('./router');
 const bp = require('body-parser');
 const cors = require('cors');
+const helmet = require('helmet');
 
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
@@ -13,6 +14,7 @@ mongoDB.mongodb.once('open', (_) => {
   console.log('Mongo Conectado');
 });
 
+app.use(helmet());
 app.use(cors());
 app.set('view engine', 'ejs');
 app.locals.checkScope = checkScope;
