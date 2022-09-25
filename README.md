@@ -160,6 +160,11 @@ heroku container:release web -a name_app
 heroku open -a name_app
 ```
 
+### Variáveis de ambiente
+OAUTH_SECRET - Chave simétrica usada com os dispositivos IoT
+OAUTH_PUB - Chave pública para token de usuários
+OAUTH_PRIVATE - Chave privada para assinar tokens de usuários
+AWS - Variáveis do ambiente S3
+
 ### Trabalho a ser feito
-- Desenvolver registro de usuários
-- Desenvolver registro de aplicações (Pesquisa)
+- Desenvolver plataforma de registro de usuários, aplicativos e dispositivos (Pesquisa)
