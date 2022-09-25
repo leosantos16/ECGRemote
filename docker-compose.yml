@@ -11,8 +11,6 @@ services:
       - DEFAULT_URL=${DEFAULT_URL}
       - OAUTH_PUB=${OAUTH_PUB}
       - OAUTH_PRIVATE=${OAUTH_PRIVATE}
-    depends_on:
-        - db
     volumes:
       - ".:/usr/src/app"
       - "./node_modules:/usr/src/app/node_modules"
