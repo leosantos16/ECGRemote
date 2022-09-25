@@ -18,6 +18,10 @@ router.get('/list', (req, res) => {
   AuthController.list(req, res);
 });
 
+router.post('/select', (req, res) => {
+  AuthController.select(req, res);
+});
+
 router.get('/authorize', (req, res) => {
   AuthController.authorize(req, res);
 });

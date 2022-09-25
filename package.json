@@ -5,6 +5,7 @@
   "license": "MIT",
   "dependencies": {
     "ajv": "^8.10.0",
+    "aws-sdk": "^2.1223.0",
     "axios": "^0.26.1",
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
@@ -15,6 +16,7 @@
     "fhir-schemas": "^0.3.2",
     "helmet": "^5.1.0",
     "ip": "^1.1.5",
+    "jose": "^4.8.3",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.0.0"
   },

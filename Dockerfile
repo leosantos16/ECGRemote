@@ -19,7 +19,7 @@ RUN pip3 install pymongo[tls] ; pip3 install python-dotenv ;\
  pip3 install dnspython ; pip3 install certifi ; pip3 install requests
 
 COPY package.json /usr/src/app
-RUN cd /usr/src/app && npm install
+RUN cd /usr/src/app && rm -rf node_modules && rm -rf package-lock.json && npm install
 
 WORKDIR /usr/src/app
 COPY . /usr/src/app

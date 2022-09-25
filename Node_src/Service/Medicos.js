@@ -1,4 +1,4 @@
-const MedicosDatabase = require('../database/BusinessModels/Medicos')();
+const MedicosDatabase = require('../model/BusinessModels/Medicos')();
 
 class MedicosService {
   async create(Medico) {

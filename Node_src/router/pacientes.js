@@ -1,6 +1,6 @@
 const router = require('express').Router();
 
-const PacientesController = require('../Controller/Pacientes');
+const PacientesController = require('../controller/pacientes');
 
 router.get('/', (req, res) => {
   PacientesController.find(req, res);

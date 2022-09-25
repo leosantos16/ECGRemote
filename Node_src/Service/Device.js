@@ -1,4 +1,4 @@
-const DeviceDatabase = require('../database/FHIRResource/Device')();
+const DeviceDatabase = require('../model/FHIRResource/Device')();
 
 class DeviceService {
   async create(device) {

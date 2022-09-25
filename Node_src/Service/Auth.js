@@ -1,11 +1,14 @@
-const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const mongoose = require('mongoose');
-const AuthDatabase = require('../database/Auth')();
-const PacienteService = require('./Pacientes');
-const MedicoService = require('./Medicos');
+const AuthDatabase = require('../model/Auth')();
+const PacienteService = require('./pacientes');
+const MedicoService = require('./medicos');
 const PatientService = require('./Patient');
-const { checkScope } = require('../utils/Auth');
+const {
+  signPayload,
+  verifyToken,
+  verifySymmetricToken,
+} = require('../utils/keys');
 
 class AuthService {
   async login(body) {
@@ -31,21 +34,19 @@ class AuthService {
         };
       }
 
-      const checkScopes = checkScope(body.scope);
-      if (checkScopes[2] || checkScopes[4] || checkScopes[5]) {
-        return {
-          code: 401,
-          message: 'User flow clients do not have write permission',
-        };
-      }
-
-      const auth = await AuthDatabase.find({
+      const auth = await AuthDatabase.findOne({
         client_id: body.client_id,
         paciente_id: login[0]._id,
       });
-      if (auth.length === 0) {
+      if (!auth || auth.length === 0) {
         return {
           login: login[0],
+        };
+      }
+      if (auth.redirect_uri !== body.redirect_uri) {
+        return {
+          code: 401,
+          message: 'Wrong client info',
         };
       }
 
@@ -56,13 +57,10 @@ class AuthService {
           },
         },
       });
-      const code = jwt.sign(
-        { patient: patient.id, scope: auth.scope },
-        `${process.env.OAUTH_SECRET}`,
-        {
-          expiresIn: 300,
-        }
-      );
+      const payload = { patient: patient._id, scope: auth.scope };
+      const code = await signPayload(payload, 60);
+      auth.authorization_code = code;
+      await auth.save();
       return {
         code,
         login: login[0],
@@ -74,14 +72,6 @@ class AuthService {
 
   async authorize(params) {
     try {
-      const auth = await AuthDatabase.create({
-        aud: params.aud,
-        scope: params.scope,
-        client_id: params.client_id,
-        state: params.state,
-        redirect_uri: params.redirect_uri,
-        paciente_id: params.paciente_id,
-      });
       const patient = await PatientService.findOne({
         identifier: {
           $elemMatch: {
@@ -89,13 +79,20 @@ class AuthService {
           },
         },
       });
-      const code = jwt.sign(
-        { patient: patient.id, scope: auth.scope },
-        `${process.env.OAUTH_SECRET}`,
-        {
-          expiresIn: 300,
-        }
+      const code = await signPayload(
+        { patient: patient._id, scope: params.scope },
+        60
       );
+      await AuthDatabase.create({
+        aud: params.aud,
+        scope: params.scope,
+        client_id: params.client_id,
+        state: params.state,
+        redirect_uri: params.redirect_uri,
+        paciente_id: params.paciente_id,
+        patient_id: patient._id,
+        authorization_code: code,
+      });
       return {
         params,
         code,
@@ -107,55 +104,61 @@ class AuthService {
 
   async select(body) {
     const patient = await PatientService.findById(body.patient);
-    const code = jwt.sign(
-      { patient: patient.id, scope: body.scope },
-      `${process.env.OAUTH_SECRET}`,
-      {
-        expiresIn: 300,
-      }
+    const code = await signPayload(
+      { patient: patient._id, scope: body.scope },
+      3600
     );
+    await AuthDatabase.create({
+      aud: body.aud,
+      scope: body.scope,
+      client_id: body.client_id,
+      state: body.state,
+      redirect_uri: body.redirect_uri,
+      patient_id: body.patient,
+      authorization_code: code,
+    });
     return {
-      params,
       code,
     };
   }
 
   async token(body) {
-    if (body.code == null) {
-      return {
-        code: 400,
-        message: 'Invalid params',
-      };
-    }
-
     try {
-      const result = await AuthDatabase.findOne({
-        client_id: body.client_id,
-      });
-      const decodedJWT = jwt.verify(body.code, process.env.OAUTH_SECRET);
-      let arrayScopes = result.scope.split(' ');
-      if (decodedJWT.scope !== undefined) {
-        arrayScopes = decodedJWT.scope.split(' ');
-      }
-      if (result === null) {
+      if (body.code == null) {
         return {
-          code: 401,
-          message: 'Invalid user',
+          code: 400,
+          message: 'Invalid params',
         };
       }
-      if (decodedJWT.grant_type === 'authorization_code') {
+      if (body.grant_type === 'authorization_code') {
+        const decodedJWT = await verifyToken(body.code);
+        const result = await AuthDatabase.findOne({
+          client_id: body.client_id,
+          redirect_uri: body.redirect_uri,
+          patient_id: new mongoose.Types.ObjectId(decodedJWT.patient),
+          authorization_code: body.code,
+        });
+        let arrayScopes = result.scope.split(' ');
+        if (decodedJWT.scope !== undefined) {
+          arrayScopes = decodedJWT.scope.split(' ');
+        }
+        if (result === null || result.length === 0) {
+          return {
+            code: 401,
+            message: 'Invalid user',
+          };
+        }
+        result.authorization_code = null;
+        await result.save();
         const patient = await PatientService.findById(decodedJWT.patient);
-        const access_token = jwt.sign(
+        const access_token = await signPayload(
           {
             scope: decodedJWT.scope,
             patient: decodedJWT.patient,
             client_id: body.client_id,
             expires_in: 3600,
           },
-          `${process.env.OAUTH_SECRET}`,
-          {
-            expiresIn: 3600,
-          }
+          3600
         );
         const retorno = {
           access_token,
@@ -166,41 +169,59 @@ class AuthService {
           client_id: body.client_id,
         };
         if (arrayScopes.includes('openid')) {
-          retorno.id_token = jwt.sign(
+          const id_token = await signPayload(
             {
               name: patient.name.use,
               given_name: patient.name.given,
               family_name: patient.name.family,
-              profile: `${process.env.DEFAULT_URL}/Patient/${patient.id}`,
+              profile: `${process.env.DEFAULT_URL}/Patient/${patient._id}`,
             },
-            `${process.env.OAUTH_SECRET}`,
-            { expiresIn: 3600 }
+            3600
           );
+          retorno.id_token = id_token;
         }
         if (arrayScopes.includes('launch/patient')) {
-          retorno.patient = patient.id;
+          retorno.patient = decodedJWT.patient;
         }
         return retorno;
-      } else if (decodedJWT.grant_type === 'client_credentials') {
-        const access_token = jwt.sign(
-          {
-            scope: decodedJWT.scope,
-            client_id: body.client_id,
-            expires_in: 3600,
-          },
-          `${process.env.OAUTH_SECRET}`,
-          {
-            expiresIn: 3600,
+      } else {
+        const decodedJWT = verifySymmetricToken(body.code);
+        if (decodedJWT.grant_type === 'client_credentials') {
+          const result = await AuthDatabase.findOne({
+            client_id: decodedJWT.client_id,
+            client_secret: decodedJWT.client_secret,
+          });
+          if (
+            result === null ||
+            result.length === 0 ||
+            result.client_secret !== decodedJWT.client_secret
+          ) {
+            return {
+              code: 401,
+              message: 'Invalid user',
+            };
           }
-        );
-        const retorno = {
-          access_token,
-          token_type: 'bearer',
-          expires_in: 3600,
-          scope: decodedJWT.scope,
-          client_id: body.client_id,
+          const access_token = await signPayload(
+            {
+              scope: result.scope,
+              client_id: body.client_id,
+              expires_in: 3600,
+            },
+            3600
+          );
+          const retorno = {
+            access_token,
+            token_type: 'bearer',
+            expires_in: 3600,
+            scope: body.scope,
+            client_id: body.client_id,
+          };
+          return retorno;
+        }
+        return {
+          code: 401,
+          message: 'Invalid grant type',
         };
-        return retorno;
       }
     } catch (e) {
       console.log(e);

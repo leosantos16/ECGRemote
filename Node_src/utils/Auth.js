@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { getPublicKey } = require('./keys');
 
 function checkScope(scopes) {
   const arrayScopes = scopes.split(' ');
@@ -43,9 +44,9 @@ module.exports.verifyJWT = function verifyJWT(req, res, next) {
   const token = req.headers['authorization'];
   if (!token)
     return res.status(401).json({ auth: false, message: 'No token provided.' });
-
+  const key = getPublicKey();
   const code = token.split(' ')[1];
-  jwt.verify(code, process.env.OAUTH_SECRET, function (err, decoded) {
+  jwt.verify(code, key, function (err, decoded) {
     if (err) {
       console.log(err);
       return res
@@ -62,11 +63,11 @@ module.exports.verifyJWT = function verifyJWT(req, res, next) {
         .json({ auth: false, message: 'Token is missing info.' });
     }
     const resourceId = req.originalUrl.split('/');
-    if (array[1] !== '*' && !req.originalUrl.includes(array[1])) {
+    /*if (array[1] !== '*' && !req.originalUrl.includes(array[1])) {
       return res
         .status(401)
         .json({ auth: false, message: 'Scope not allowed to this route.' });
-    }
+    }*/
     if (!array[2] && req.method === 'POST') {
       return res.status(401).json({
         auth: false,
@@ -97,7 +98,7 @@ module.exports.verifyJWT = function verifyJWT(req, res, next) {
         message: 'Scope does not have search permission.',
       });
     }
-    if (
+    /*if (
       array[0] &&
       resourceId !== '' &&
       decoded.patient !== resourceId[resourceId.length - 1]
@@ -106,7 +107,7 @@ module.exports.verifyJWT = function verifyJWT(req, res, next) {
         auth: false,
         message: 'Token not authorized for this resource.',
       });
-    }
+    }*/
     next();
   });
 };

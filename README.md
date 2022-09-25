@@ -118,12 +118,15 @@ docker-compose logs -f
 ## Rotas
 | Rota               | Metodo | Descricao                                                                                                  |
 |--------------------|--------|------------------------------------------------------------------------------------------------------------|
-| `/save_exam`       | POST   | Salva os exames no formato `{sampling_rate": 360,"resolution": 145,"labels": ["ECG"],"data": [968,870,1110,4567],	"userId": "Fulano de tal",	"title": "Ola",type": "1 NSR"}`
-| `/:user/exams/:id/remove` |DELETE| Remove o Exame pelo ID
-|`/:user/exams/update/:id`| GET | Faz um Update do exame pelo ID (utilizado para acresentar mais dados de ecg) exemplo: http://ecgremoto.herokuapp.com/{nome}/exams/update/{id}?data=1234 
-|`/list_all`        | GET   | Lista todos os exames
-|`/:user/exams/:id` | GET | Acessa o exame Pelo ID|
-|`/update_exam/:id` |POST| Faz a mesma coisa que a rota `/:user/exams/update/:id`, porem é ustilizada com o metodo POST (utilizado para acresentar mais dados de ecg), exemplo: {"data":[1111, 952, 988]}. 
+| `/well-known/smart-configuration` | GET | Mostra as configurações para autenticação |
+| `/auth/register` | GET | Inicia o processo de autenticação |
+| `/auth/login` | GET | Exibe a tela de login |
+| `/auth/login` | POST | Efetua o login do usuário, sendo paciente ou médico |
+| `/auth/authorize` | GET | Exibe a tela das permissões solicitadas pela aplicação |
+| `/auth/authorize` | POST | Confirma a autorização da aplicação pelo usuário |
+| `/auth/list` | GET | Exibe lista de pacientes do login do médico |
+| `/auth/select` | POST | Seleciona o paciente para exibir os dados |
+| `/auth/token` | POST | Gera um token com os grant_types: 'authorization_code' e 'client_credentials' |
 
 ### Comunicação entre Servidor <-> Hardware
 
@@ -156,3 +159,7 @@ docker push registry.heroku.com/name_app/web
 heroku container:release web -a name_app
 heroku open -a name_app
 ```
+
+### Trabalho a ser feito
+- Desenvolver registro de usuários
+- Desenvolver registro de aplicações (Pesquisa)

@@ -1,15 +1,30 @@
-const PatientDatabase = require('../database/FHIRResource/Patient')();
+const PatientDatabase = require('../model/FHIRResource/Patient')();
+const PractitionerDatabase = require('../model/FHIRResource/Practitioner')();
 
 class PatientService {
   async create(patient) {
     try {
       const result = await PatientDatabase.create(patient);
-      console.log(result);
       return result;
     } catch (e) {
-      console.log(e);
       return e;
     }
+  }
+
+  async findPatientByPractitioner(medico) {
+    const practitioner = await PractitionerDatabase.findOne({
+      'identifier.value': medico,
+      'identifier.system': 'own',
+    });
+    if (!practitioner) return [];
+    const patients = await PatientDatabase.find({
+      'generalPractitioner.reference': `local/${practitioner.id}`,
+    });
+    const pacientes = patients.map((patient) => ({
+      id: patient._id,
+      name: `${patient.name[0].use} ${patient.name[0].family}`,
+    }));
+    return pacientes;
   }
 
   async find() {
@@ -32,11 +47,10 @@ class PatientService {
 
   async findById(id) {
     try {
-      const result = await PatientDatabase.findOne({
-        id,
-      });
+      const result = await PatientDatabase.findById(id);
       return result;
     } catch (e) {
+      console.log(e);
       return e;
     }
   }

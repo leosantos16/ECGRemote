@@ -18,6 +18,9 @@ module.exports = function () {
     client_id: {
       type: String,
     },
+    client_secret: {
+      type: String,
+    },
     scope: {
       type: String,
     },
@@ -27,11 +30,17 @@ module.exports = function () {
     state: {
       type: String,
     },
+    patient_id: {
+      type: mongoose.Types.ObjectId,
+    },
     paciente_id: {
       type: mongoose.Types.ObjectId,
     },
     medico_id: {
       type: mongoose.Types.ObjectId,
+    },
+    authorization_code: {
+      type: String,
     },
   });
 

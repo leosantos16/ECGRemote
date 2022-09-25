@@ -2,17 +2,20 @@ version: "3.1"
 services:
   cloud-ecg:
     image: cloud-ecg:latest
-    container_name: CLOUD_ECG
+    container_name: CLOUD_ECG1
     build: "./"
     restart: always
     ports:
       - ${SERVER_PORT}:${SERVER_PORT}
     environment:
-      - OAUTH_SECRET=${OAUTH_SECRET}
       - DEFAULT_URL=${DEFAULT_URL}
+      - OAUTH_PUB=${OAUTH_PUB}
+      - OAUTH_PRIVATE=${OAUTH_PRIVATE}
+    depends_on:
+        - db
     volumes:
       - ".:/usr/src/app"
-      - "/usr/src/app/node_modules"
+      - "./node_modules:/usr/src/app/node_modules"
     command: yarn start
     logging:
       driver: "json-file"
